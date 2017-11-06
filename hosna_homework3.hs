@@ -1,24 +1,43 @@
 {-# OPTIONS_GHC -fwarn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-tabs #-}
 
+-- CITE SOURCES: he won't murder us, just cite it damn it; cite > plagiarism 
+--			don't make him look ("more") like an asshole in front
+--			of chadhy and billy
+
 module Homework3 where
 import Test.Hspec
+import Control.Exception (evaluate) -- `shouldThrow` anyError
 import RPNAST
 
-
+-- notes: lexing (tokenizing), words (tokenizes by white space), read and pattern-matching, 
+--		monadically: sequence of applications that eat up lines of code to do read
+-- description: 
 prob1 :: String -> PExp
 prob1 _ = []
 
+-- notes: PExp is list of Ops, use stacks -> popping off, dynamic and static errors, 
+--		pattern match for good cases (exhaustive) [total#(op) = total#(val) - 1], 
+--		accumulator passing style -> list that handles processed ops, and one 
+--		that handles unprocessed ops; apparently should be worked on as group
+-- description: 
 prob2 :: PExp -> Int
 prob2 _ = 2
 
+-- notes: if prob2 is exhaustive -> can be changed slightly to be prob3
+-- description: 
 prob3 :: PExp -> RPNResult
 prob3 _ = Failure DivByZero
 
+-- notes: use stacks, apparently will cause the most difficulty
+-- description: 
 prob4 :: PExp -> Result String String
 prob4 _ = Failure "Bad Input."
 
 -- Write your Hspec Tests below
+-- note: need at least 1 more than the examples given in the pdf
+--		please also try to be thorough
+
 test_prob1 :: IO ()
 test_prob1 = hspec $ do
   describe "Prob1 from HW3" $ do
@@ -33,7 +52,8 @@ test_prob1 = hspec $ do
     context "For \"+ - * / 200\"" $ do
       it "should return [Plus, Minus, Mul, IntDiv, Val 200]" $ do
         prob1 "+ - * / 200" `shouldBe` [Plus, Minus, Mul, IntDiv, Val 200]
-
+    
+    -- note: there should be a bad case for bad input other than ""
 
 test_prob2 :: IO ()
 test_prob2 = hspec $ do
@@ -42,6 +62,7 @@ test_prob2 = hspec $ do
       it "should return 2" $ do
         prob2 [Val 4, Val 2, IntDiv] `shouldBe` 2
 
+    -- note: input with incorrect number of vals and ops
 
 test_prob3 :: IO ()
 test_prob3 = hspec $ do
@@ -57,6 +78,8 @@ test_prob3 = hspec $ do
     context "For [Val 5, Val 1, Val 1, Plus, Mul]" $ do
       it "should return Success 10" $ do
         prob3 [Val 5, Val 1, Val 1, Plus, Mul] `shouldBe` Success 10
+
+    -- note: see note for test_prob2
 
 test_prob4 :: IO ()
 test_prob4 = hspec $ do
