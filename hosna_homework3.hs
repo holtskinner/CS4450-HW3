@@ -14,6 +14,16 @@ import RPNAST
 --		monadically: sequence of applications that eat up lines of code to do read
 -- description:
 prob1 :: String -> PExp
+prob1 x = prob1' (words x)
+
+prob1' :: [String] -> PExp
+prob1' [] = []
+prob1' (" ":xs)   = prob1' xs
+prob1' ("+":xs)   = Plus:(prob1' xs)
+prob1' ("-":xs)   = Minus:(prob1' xs)
+prob1' ("*":xs)   = Mul:(prob1' xs)
+prob1' ("/":xs)   = IntDiv:(prob1' xs)
+prob1' (x:xs)     = (Val (read x :: Int)):(prob1' xs)
 
 -- notes: PExp is list of Ops, use stacks -> popping off, dynamic and static errors,
 --		pattern match for good cases (exhaustive) [total#(op) = total#(val) - 1],
