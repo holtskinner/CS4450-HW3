@@ -3,11 +3,11 @@
 
 module Homework3 where
 import Test.Hspec
+import Control.Exception (evaluate)
 import RPNAST
 
 
 prob1 :: String -> PExp
-prob1 _ = []
 
 prob2 :: PExp -> Int
 prob2 _ = 2
@@ -53,7 +53,7 @@ test_prob3 = hspec $ do
     context "For [IntDiv, Plus, Val 0]" $ do
       it "should return Failure BadSyntax" $ do
         prob3 [IntDiv, Plus, Val 0] `shouldBe` Failure BadSyntax
-    
+
     context "For [Val 5, Val 1, Val 1, Plus, Mul]" $ do
       it "should return Success 10" $ do
         prob3 [Val 5, Val 1, Val 1, Plus, Mul] `shouldBe` Success 10
@@ -64,7 +64,7 @@ test_prob4 = hspec $ do
     context "For [Val 1, Val 1, Plus]" $ do
       it "should return Success \"(1 + 1)\"" $ do
         prob4 [Val 1, Val 1, Plus] `shouldBe` Success "(1 + 1)"
-    
+
     context "For [Val 2, Val 4, Plus, Val 3, IntDiv]" $ do
       it "should return Success \"((2 + 4) / 3)\"" $ do
         prob4 [Val 2, Val 4, Plus, Val 3, IntDiv] `shouldBe` Success "((2 + 4) / 3)"
@@ -72,7 +72,7 @@ test_prob4 = hspec $ do
     context "For [Val 2]" $ do
       it "should return Success \"2\"" $ do
         prob4 [Val 2] `shouldBe` Success "2"
-    
+
     context "For [Plus]" $ do
       it "should return Failure \"Bad Input.\"" $ do
         prob4 [Plus] `shouldBe` Failure "Bad Input."
