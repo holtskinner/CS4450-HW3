@@ -46,50 +46,85 @@ prob2_aps (x:xs) (y:[])
         | otherwise = error "Bad Syntax!" --prevents [+, xs] [2] (needs two nums to operate)
 prob2_aps (x:[]) (y:z:ys)  -- last input, must be evaluated
         | (x == Plus)    = case (y, z) of  --[+] [2, 2]
-                              (Val y',Val z') -> (z' + y')
+                              (Val y', Val z') -> (z' + y')
         | (x == Minus)   = case (y, z) of
-                              (Val y',Val z') -> (z' - y')
+                              (Val y', Val z') -> (z' - y')
         | (x == Mul)     = case (y, z) of
-                              (Val y',Val z') -> (z' * y')
+                              (Val y', Val z') -> (z' * y')
         | (x == IntDiv)  = case (y, z) of
-                              (Val y',Val 0)   -> error "Cannot divide by 0!"
-                              (Val y',Val z') -> (z' `div` y')
+                              (Val 0, Val z')   -> error "Cannot divide by 0!"
+                              (Val y', Val z') -> (z' `div` y')
         | otherwise      = error "Needs to end w/ an operator!"      --prevents [2] [ys]
 -- if number move on else do operation
 prob2_aps (x:xs) (y:z:ys)
         | (x == Plus)   = case (y, z) of
-                            (Val y',Val z') -> prob2_aps xs ((Val (z' + y')):ys)
+                            (Val y', Val z') -> prob2_aps xs ((Val (z' + y')):ys)
         | (x == Minus)  = case (y, z) of
-                            (Val y',Val z') -> prob2_aps xs ((Val (z' - y')):ys)
+                            (Val y', Val z') -> prob2_aps xs ((Val (z' - y')):ys)
         | (x == Mul)    = case (y, z) of
-                            (Val y',Val z') -> prob2_aps xs ((Val (z' * y')):ys)
+                            (Val y', Val z') -> prob2_aps xs ((Val (z' * y')):ys)
         | (x == IntDiv)    = case (y, z) of
-                            (Val y',Val 0)   -> error "Cannot divide by 0!"
-                            (Val y',Val z') -> prob2_aps xs ((Val (z' `div` y')):ys)
+                            (Val 0, Val z')  -> error "Cannot divide by 0!"
+                            (Val y', Val z') -> prob2_aps xs ((Val (z' `div` y')):ys)
         | otherwise     = prob2_aps xs (x:y:z:ys)
 isVal :: Op -> Bool
 isVal x = if (x `elem` [Plus, Minus, Mul, IntDiv])
           then False
           else True
+{-
+  -- regular factorial, sucks mad dong
+  fact :: Int -> Int
+  fact 0 = 1
+  fact n = n * fact (n - 1)
 
--- regular factorial, sucks mad dong
-fact :: Int -> Int
-fact 0 = 1
-fact n = n * fact (n - 1)
-
--- fancy new factorial, uses accumulator processing style
--- keeps track of running value by passing it as parameter(uses eager evaluation)
-fact_aps :: Int -> Int -> Int
-fact_aps 0 a = a
-fact_aps n a = fact_aps (n - 1) (n * a)
--- primer function
-factorial :: Int -> Int
-factorial n = fact_aps n 1
-
+  -- fancy new factorial, uses accumulator processing style
+  -- keeps track of running value by passing it as parameter(uses eager evaluation)
+  fact_aps :: Int -> Int -> Int
+  fact_aps 0 a = a
+  fact_aps n a = fact_aps (n - 1) (n * a)
+  -- primer function
+  factorial :: Int -> Int
+  factorial n = fact_aps n 1
+-}
 -- notes: if prob2 is exhaustive -> can be changed slightly to be prob3
 -- description:
 prob3 :: PExp -> RPNResult
-prob3 _ = Failure DivByZero
+prob3 ((Val v):[])               = Success v --[2]
+prob3 (x:[])                     = Failure BadSyntax --[*]
+prob3 (x:y:xs)
+       | (xs == [])              = Failure BadSyntax --prevents [2,2]
+       | (isVal x) && (isVal y)  = prob3_aps (y:xs) [x]  --only if [2,2,xs]
+       | otherwise               = Failure BadSyntax --prevents [2,+] and [+, xs]
+
+--helper function
+prob3_aps :: PExp -> PExp -> RPNResult
+prob3_aps ((Val x):[]) (ys)  = Failure BadSyntax --prevents [2] [ys] (needs to end in op)
+prob3_aps (x:xs) (y:[])
+        | (isVal x) = prob3_aps xs (x:y:[])  --if [2, xs] [2], makes [xs] [2, 2]
+        | otherwise = Failure BadSyntax --prevents [+, xs] [2] (needs two nums to operate)
+prob3_aps (x:[]) (y:z:ys)  -- last input, must be evaluated
+        | (x == Plus)    = case (y, z) of  --[+] [2, 2]
+                              (Val y',Val z') -> Success (z' + y')
+        | (x == Minus)   = case (y, z) of
+                              (Val y',Val z') -> Success (z' - y')
+        | (x == Mul)     = case (y, z) of
+                              (Val y',Val z') -> Success (z' * y')
+        | (x == IntDiv)  = case (y, z) of
+                              (Val 0, Val z')  -> Failure DivByZero
+                              (Val y', Val z') -> Success (z' `div` y')
+        | otherwise      = Failure BadSyntax      --prevents [2] [ys]
+-- if number move on else do operation
+prob3_aps (x:xs) (y:z:ys)
+        | (x == Plus)   = case (y, z) of
+                            (Val y',Val z') -> prob3_aps xs ((Val (z' + y')):ys)
+        | (x == Minus)  = case (y, z) of
+                            (Val y',Val z') -> prob3_aps xs ((Val (z' - y')):ys)
+        | (x == Mul)    = case (y, z) of
+                            (Val y',Val z') -> prob3_aps xs ((Val (z' * y')):ys)
+        | (x == IntDiv) = case (y, z) of
+                            (Val 0,Val z')  -> Failure DivByZero
+                            (Val y',Val z') -> prob3_aps xs ((Val (z' `div` y')):ys)
+        | otherwise     = prob3_aps xs (x:y:z:ys)
 
 -- notes: use stacks, apparently will cause the most difficulty
 -- description:
@@ -120,15 +155,28 @@ test_prob1 = hspec $ do
 test_prob2 :: IO ()
 test_prob2 = hspec $ do
   describe "Prob2 from HW3" $ do
+
     context "For [Val 4, Val 2, IntDiv]" $ do
       it "should return 2" $ do
         prob2 [Val 4, Val 2, IntDiv] `shouldBe` 2
 
+    context "For [Val 10, Val 2, Mul]" $ do
+      it "should return 20" $ do
+        prob2 [Val 10, Val 2, Mul] `shouldBe` 20
+
+    context "For [Val 15, Val 7, Plus]" $ do
+      it "should return 22" $ do
+        prob2 [Val 15, Val 7, Plus] `shouldBe` 22
+
+    context "For [Val 100, Val 25, Minus]" $ do
+      it "should return 75" $ do
+        prob2 [Val 100, Val 25, Minus] `shouldBe` 75
     -- note: input with incorrect number of vals and ops
 
 test_prob3 :: IO ()
 test_prob3 = hspec $ do
   describe "Prob3 from HW3" $ do
+
     context "For [Val 5, Val 0, IntDiv]" $ do
       it "should return Failure DivByZero" $ do
         prob3 [Val 5, Val 0, IntDiv] `shouldBe` Failure DivByZero
@@ -140,6 +188,22 @@ test_prob3 = hspec $ do
     context "For [Val 5, Val 1, Val 1, Plus, Mul]" $ do
       it "should return Success 10" $ do
         prob3 [Val 5, Val 1, Val 1, Plus, Mul] `shouldBe` Success 10
+
+    context "For [Val 4, Val 2, IntDiv]" $ do
+      it "should return 2" $ do
+        prob3 [Val 4, Val 2, IntDiv] `shouldBe` Success 2
+
+    context "For [Val 10, Val 2, Mul]" $ do
+      it "should return 20" $ do
+        prob3 [Val 10, Val 2, Mul] `shouldBe` Success 20
+
+    context "For [Val 15, Val 7, Plus]" $ do
+      it "should return 22" $ do
+        prob3 [Val 15, Val 7, Plus] `shouldBe` Success 22
+
+    context "For [Val 100, Val 25, Minus]" $ do
+      it "should return 75" $ do
+        prob3 [Val 100, Val 25, Minus] `shouldBe` Success 75
 
     -- note: see note for test_prob2
 
