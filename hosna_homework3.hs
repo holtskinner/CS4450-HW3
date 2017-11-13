@@ -32,7 +32,7 @@ prob1' (x:xs)     = (Val (read x :: Int)):(prob1' xs)
 -- description:
 prob2 :: PExp -> Int
 prob2 ((Val v):[])               = v --[2]
-prob2 (x:[])                     = error "Bad syntax!" --[2]
+prob2 (x:[])                     = error "Bad syntax!" --[*]
 prob2 (x:y:xs)
        | (xs == [])              = error "Needs an operator!" --prevents [2,2]
        | (isVal x) && (isVal y)  = prob2_aps (y:xs) [x]  --only if [2,2,xs]
