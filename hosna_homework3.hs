@@ -27,11 +27,64 @@ prob1' (x:xs)     = (Val (read x :: Int)):(prob1' xs)
 
 -- notes: PExp is list of Ops, use stacks -> popping off, dynamic and static errors,
 --		pattern match for good cases (exhaustive) [total#(op) = total#(val) - 1],
---		accumulator passing style -> list that handles processed ops, and one 
+--		accumulator passing style -> list that handles processed ops, and one
 --		that handles unprocessed ops; apparently should be worked on as group
 -- description:
 prob2 :: PExp -> Int
-prob2 _ = 2
+prob2 ((Val v):[])               = v --[2]
+prob2 (x:[])                     = error "Bad syntax!" --[2]
+prob2 (x:y:xs)
+       | (xs == [])              = error "Needs an operator!" --prevents [2,2]
+       | (isVal x) && (isVal y)  = prob2_aps (y:xs) [x]  --only if [2,2,xs]
+       | otherwise               = error "Must begin w/ two Vals!" --prevents [2,+] and [+, xs]
+
+--helper function
+prob2_aps :: PExp -> PExp -> Int
+prob2_aps ((Val x):[]) (ys)  = error "Needs to end w/ an operator!" --prevents [2] [ys] (needs to end in op)
+prob2_aps (x:xs) (y:[])
+        | (isVal x) = prob2_aps xs (x:y:[])  --if [2, xs] [2], makes [xs] [2, 2]
+        | otherwise = error "Bad Syntax!" --prevents [+, xs] [2] (needs two nums to operate)
+prob2_aps (x:[]) (y:z:ys)  -- last input, must be evaluated
+        | (x == Plus)    = case (y, z) of  --[+] [2, 2]
+                              (Val y',Val z') -> (z' + y')
+        | (x == Minus)   = case (y, z) of
+                              (Val y',Val z') -> (z' - y')
+        | (x == Mul)     = case (y, z) of
+                              (Val y',Val z') -> (z' * y')
+        | (x == IntDiv)  = case (y, z) of
+                              (Val y',Val 0)   -> error "Cannot divide by 0!"
+                              (Val y',Val z') -> (z' `div` y')
+        | otherwise      = error "Needs to end w/ an operator!"      --prevents [2] [ys]
+-- if number move on else do operation
+prob2_aps (x:xs) (y:z:ys)
+        | (x == Plus)   = case (y, z) of
+                            (Val y',Val z') -> prob2_aps xs ((Val (z' + y')):ys)
+        | (x == Minus)  = case (y, z) of
+                            (Val y',Val z') -> prob2_aps xs ((Val (z' - y')):ys)
+        | (x == Mul)    = case (y, z) of
+                            (Val y',Val z') -> prob2_aps xs ((Val (z' * y')):ys)
+        | (x == IntDiv)    = case (y, z) of
+                            (Val y',Val 0)   -> error "Cannot divide by 0!"
+                            (Val y',Val z') -> prob2_aps xs ((Val (z' `div` y')):ys)
+        | otherwise     = prob2_aps xs (x:y:z:ys)
+isVal :: Op -> Bool
+isVal x = if (x `elem` [Plus, Minus, Mul, IntDiv])
+          then False
+          else True
+
+-- regular factorial, sucks mad dong
+fact :: Int -> Int
+fact 0 = 1
+fact n = n * fact (n - 1)
+
+-- fancy new factorial, uses accumulator processing style
+-- keeps track of running value by passing it as parameter(uses eager evaluation)
+fact_aps :: Int -> Int -> Int
+fact_aps 0 a = a
+fact_aps n a = fact_aps (n - 1) (n * a)
+-- primer function
+factorial :: Int -> Int
+factorial n = fact_aps n 1
 
 -- notes: if prob2 is exhaustive -> can be changed slightly to be prob3
 -- description:
