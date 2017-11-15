@@ -138,6 +138,7 @@ prob4 _ = Failure "Bad Input."
 test_prob1 :: IO ()
 test_prob1 = hspec $ do
   describe "Prob1 from HW3" $ do
+
     context "For empty string" $ do
       it "should return the empty list" $ do
         prob1 "" `shouldBe` []
@@ -217,6 +218,10 @@ test_prob4 = hspec $ do
     context "For [Val 2, Val 4, Plus, Val 3, IntDiv]" $ do
       it "should return Success \"((2 + 4) / 3)\"" $ do
         prob4 [Val 2, Val 4, Plus, Val 3, IntDiv] `shouldBe` Success "((2 + 4) / 3)"
+    
+    context "For [Val 3, Val 8, Minus, Val 6, Mul]" $ do
+      it "should return Success \"((3 - 8) * 6)\"" $ do
+        prob4 [Val 3, Val 8, Minus, Val 6, Mul] `shouldBe` Success "((3 - 8) * 6)"
 
     context "For [Val 2]" $ do
       it "should return Success \"2\"" $ do
