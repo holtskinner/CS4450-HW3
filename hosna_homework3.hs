@@ -127,9 +127,34 @@ prob3_aps (x:xs) (y:z:ys)
         | otherwise     = prob3_aps xs (x:y:z:ys)
 
 -- notes: use stacks, apparently will cause the most difficulty
--- description:
+{- built off of class notes: Thank you, Mr. Reynolds
+
+evalRPN :: PExp -> Int
+evalRPN ops = go' ops []
+  where go' (Plus:rest)   (r:l:vals) = go' rest ((l + r):vals) --l and r = strings
+        go' ((Val i):[]) vals        = error "THIS DON't WORK"
+        go' ((Val i):rest) vals      = go' rest (i:vals)
+        go' (Mul:rest) (r:l:vals)    = undefined
+        go' (Minus:rest) (r:l:vals)  = undefined
+        go' (IntDiv:rest) (0:l:vals) = undefined
+        go' (IntDiv:rest) (r:l:vals) = undefined
+        go' [] [i]                   = i
+        go' _ _                      = undefined
+
+-}
+-- description: returns a string of an equivalent expression in infix notation w/ parenthesis
 prob4 :: PExp -> Result String String
-prob4 _ = Failure "Bad Input."
+prob4 os = aps os []
+  where aps [] (r:[])                         = Success r
+        aps [] (r:l:[])                       = Failure "Bad Input"
+        aps ((Val i):(Val i'):[]) vals        = Failure "Bad Input"
+        aps ((Val i):rest) (vals)             = aps rest ((show i):vals)
+        aps (Plus:rest) (r:l:vals)            = aps rest (("(" ++ l ++ " + " ++ r ++ ")"):vals)
+        aps (Mul:rest) (r:l:vals)             = aps rest (("(" ++ l ++ " * " ++ r ++ ")"):vals)
+        aps (Minus:rest) (r:l:vals)           = aps rest (("(" ++ l ++ " - " ++ r ++ ")"):vals)
+        aps (IntDiv:rest) ("0":l:vals)        = Failure "DivByZero"
+        aps (IntDiv:rest) (r:l:vals)          = aps rest (("(" ++ l ++ " / " ++ r ++ ")"):vals)
+        aps _ _                               = Failure "Bad Input"
 
 -- Write your Hspec Tests below
 -- note: need at least 1 more than the examples given in the pdf
@@ -218,7 +243,7 @@ test_prob4 = hspec $ do
     context "For [Val 2, Val 4, Plus, Val 3, IntDiv]" $ do
       it "should return Success \"((2 + 4) / 3)\"" $ do
         prob4 [Val 2, Val 4, Plus, Val 3, IntDiv] `shouldBe` Success "((2 + 4) / 3)"
-    
+
     context "For [Val 3, Val 8, Minus, Val 6, Mul]" $ do
       it "should return Success \"((3 - 8) * 6)\"" $ do
         prob4 [Val 3, Val 8, Minus, Val 6, Mul] `shouldBe` Success "((3 - 8) * 6)"
@@ -229,7 +254,7 @@ test_prob4 = hspec $ do
 
     context "For [Plus]" $ do
       it "should return Failure \"Bad Input.\"" $ do
-        prob4 [Plus] `shouldBe` Failure "Bad Input."
+        prob4 [Plus] `shouldBe` Failure "Bad Input"
 
 test_probs :: IO ()
 test_probs = do
